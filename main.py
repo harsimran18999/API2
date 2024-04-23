@@ -84,3 +84,27 @@ def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends()):
         )
     access_token = create_user_token(user)
     return {"access_token": access_token, "token_type": "bearer"}
+
+@app.post("/users/", response_model=User)
+def create_user(user: UserInDB):
+    if user.username in users_db:
+        raise HTTPException(status_code=400, detail="Username already exists")
+    user.hashed_password = get_password_hash(user.hashed_password)
+    users_db[user.username] = user
+    credits_db[user.username] = user.credits
+    return user
+
+@app.get("/users/me/", response_model=User)
+def read_users_me(token: str = Depends(oauth2_scheme)):
+    username = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])["sub"]
+    return users_db[username]
+
+@app.get("/users/", response_model=List[User])
+def read_users():
+    return list(users_db.values())
+
+@app.get("/users/{username}", response_model=User)
+def read_user(username: str):
+    if username not in users_db:
+        raise HTTPException(status_code=404, detail="User not found")
+    return users_db[username]
