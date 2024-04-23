@@ -122,3 +122,18 @@ def delete_user(username: str):
     del users_db[username]
     del credits_db[username]
     return {"message": "User deleted successfully"}
+@app.post("/jobs/")
+def submit_job(job_data: dict, token: str = Depends(oauth2_scheme)):
+    username = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])["sub"]
+    if credits_db[username] <= 0:
+        raise HTTPException(status_code=400, detail="Insufficient credits")
+    jobs_queue.append((username, job_data))
+    credits_db[username] -= 1
+    return {"message": "Job submitted successfully"}
+
+@app.get("/jobs/", response_model=List[dict])
+def get_jobs(token: str = Depends(oauth2_scheme)):
+    username = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])["sub"]
+    if username != "admin":
+        raise HTTPException(status_code=403, detail="Admin access required")
+    return jobs_queue
