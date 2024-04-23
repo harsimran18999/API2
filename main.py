@@ -21,3 +21,17 @@ ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
 # Password hashing
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+# Data model for User
+class User(BaseModel):
+    username: str
+    email: str
+    hashed_password: str
+
+# Data model for User Credentials
+class UserInDB(User):
+    credits: int = 0
+
+# Data model for JWT Token
+class Token(BaseModel):
+    access_token: str
+    token_type: str
