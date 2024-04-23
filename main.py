@@ -108,3 +108,17 @@ def read_user(username: str):
     if username not in users_db:
         raise HTTPException(status_code=404, detail="User not found")
     return users_db[username]
+@app.put("/users/{username}", response_model=User)
+def update_user(username: str, user: User):
+    if username not in users_db:
+        raise HTTPException(status_code=404, detail="User not found")
+    users_db[username] = user
+    return user
+
+@app.delete("/users/{username}")
+def delete_user(username: str):
+    if username not in users_db:
+        raise HTTPException(status_code=404, detail="User not found")
+    del users_db[username]
+    del credits_db[username]
+    return {"message": "User deleted successfully"}
